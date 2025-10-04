@@ -1,0 +1,92 @@
+name: Build and Release
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch: # Allows manual triggering of the workflow
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Required to create releases
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: set up JDK 17
+      uses: actions/setup-java@v3
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+
+    - name: Setup Gradle
+      uses: gradle/gradle-build-action@v2
+      with:
+        gradle-version: 8.4
+
+    - name: Setup Gradle Wrapper
+      # This step ensures that the gradle-wrapper.jar is present and correctly configured.
+      # It will download the wrapper if it's not already present.
+      run: |
+        if [ ! -f "gradle/wrapper/gradle-wrapper.jar" ]; then
+          echo "gradle-wrapper.jar not found. Generating it using the provisioned Gradle."
+          gradle wrapper
+        fi
+        chmod +x gradlew
+
+    - name: Clean project
+      run: ./gradlew clean
+
+    - name: Build Debug APK
+      run: ./gradlew assembleDebug
+
+    - name: Find APK files
+      run: find app/build -name "*.apk"
+
+    - name: Extract version name
+      # Extracts the versionName from app/build.gradle.kts to use in the release tag.
+      id: version
+      run: echo "VERSION_NAME=$(grep -oP 'versionName\s*=\s*"\K[^"]+' app/build.gradle.kts)" >> $GITHUB_ENV
+
+    - name: Determine APK Path
+      id: apk_path
+      run: |
+        # Find the APK file dynamically
+        APK_FILE=$(find app/build -name "*.apk" | head -n 1)
+        
+        if [ -n "$APK_FILE" ]; then
+          echo "APK_TO_UPLOAD=$APK_FILE" >> $GITHUB_ENV
+          # Extract the APK name from the path
+          APK_BASENAME=$(basename "$APK_FILE")
+          echo "APK_NAME=$APK_BASENAME" >> $GITHUB_ENV
+        else
+          echo "Error: No APK found to upload."
+          exit 1
+        fi
+
+    - name: List APK files
+      # Lists the generated APK files for verification.
+      run: ls -l app/build/outputs/apk/release/ || ls -l app/build/outputs/apk/debug/ # List whichever directory exists
+
+    - name: Upload APK as artifact
+      # Uploads the generated APK as a workflow artifact.
+      uses: actions/upload-artifact@v4
+      with:
+        name: app-apk
+        path: ${{ env.APK_TO_UPLOAD }}
+
+    - name: Create or Update Release
+      # Creates a new GitHub Release or updates an existing one.
+      # The GITHUB_TOKEN is automatically provided by GitHub Actions.
+      uses: softprops/action-gh-release@v2
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: v${{ env.VERSION_NAME }}
+        name: Release v${{ env.VERSION_NAME }}
+        body: |
+          Automated release for version ${{ env.VERSION_NAME }}
+        draft: false
+        prerelease: false
+        files: ${{ env.APK_TO_UPLOAD }}
+        overwrite: true
