@@ -65,7 +65,7 @@ fun BinnedNoteScreen(
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
-                            text = note.content,
+                            text = HtmlConverter.htmlToAnnotatedString(note.content),
                             style = MaterialTheme.typography.bodyLarge,
                             color = MaterialTheme.colorScheme.onSurface
                         )
