@@ -412,7 +412,7 @@ fun NotesScreen(
                                     StaggeredGridItems(pinnedNotes, key = { it.note.id }) { note ->
                                         val isExpanded = state.expandedNoteId == note.note.id
                                         NoteItem(
-                                            modifier = Modifier.graphicsLayer { alpha = if (isExpanded) 0f else 1f },
+                                            modifier = Modifier.animateItemPlacement().graphicsLayer { alpha = if (isExpanded) 0f else 1f },
                                             note = note,
                                             isSelected = state.selectedNoteIds.contains(note.note.id),
                                             onNoteClick = {
@@ -443,7 +443,7 @@ fun NotesScreen(
                                     StaggeredGridItems(otherNotes, key = { it.note.id }) { note ->
                                         val isExpanded = state.expandedNoteId == note.note.id
                                         NoteItem(
-                                            modifier = Modifier.graphicsLayer { alpha = if (isExpanded) 0f else 1f },
+                                            modifier = Modifier.animateItemPlacement().graphicsLayer { alpha = if (isExpanded) 0f else 1f },
                                             note = note,
                                             isSelected = state.selectedNoteIds.contains(note.note.id),
                                             onNoteClick = {
@@ -479,7 +479,7 @@ fun NotesScreen(
                                     items(pinnedNotes, key = { it.note.id }) { note ->
                                         val isExpanded = state.expandedNoteId == note.note.id
                                         NoteItem(
-                                            modifier = Modifier.graphicsLayer { alpha = if (isExpanded) 0f else 1f },
+                                            modifier = Modifier.animateItemPlacement().graphicsLayer { alpha = if (isExpanded) 0f else 1f },
                                             note = note,
                                             isSelected = state.selectedNoteIds.contains(note.note.id),
                                             onNoteClick = {
@@ -510,7 +510,7 @@ fun NotesScreen(
                                     items(otherNotes, key = { it.note.id }) { note ->
                                         val isExpanded = state.expandedNoteId == note.note.id
                                         NoteItem(
-                                            modifier = Modifier.graphicsLayer { alpha = if (isExpanded) 0f else 1f },
+                                            modifier = Modifier.animateItemPlacement().graphicsLayer { alpha = if (isExpanded) 0f else 1f },
                                             note = note,
                                             isSelected = state.selectedNoteIds.contains(note.note.id),
                                             onNoteClick = {
